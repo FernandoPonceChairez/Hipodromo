@@ -1,0 +1,149 @@
+<h1 class="text-center my-24 text-3x1">Welcome <b>{{name}}</b> pito grande</h1>
+
+<!-- public/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Chat App</title>
+</head>
+
+  <div class="block mx-auto my-12 p-8 bg-white w-1/3 border border-gray-200 rounded-lg shadow-lg">
+    <input class="w-full p-2 my-2" type="submit" id="username" value={{name}}>
+    <button class="rounded-md bg-red-700 w-full text-lg text-white font-semibold p-2 my-3 hover:bg-red-800 foucs:bg-red-800" onclick="joinChat()">Join Chat</button>
+  </div>
+  <div class="block mx-auto my-12 p-8 bg-white w-1/3 border border-gray-200 rounded-lg shadow-lg">
+    <textarea id="messages" cols="50" rows="10" readonly></textarea>
+    <input class="border border-gray-200 w-full text-lg placeholder-gray-500 p-2 my-2 focus:bg-white" type="text" id="message" placeholder="Type your message">
+    <button class="rounded-md bg-red-700 w-full text-lg text-white font-semibold p-2 my-3 hover:bg-red-800 foucs:bg-red-800" onclick="sendMessage()">Send</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    function joinChat() {
+      const username = document.getElementById('username').value;
+      if (username.trim() !== '') {
+        socket.emit('join', username);
+        document.getElementById('username').disabled = true;
+      }
+    }
+
+    socket.on('userJoined', (username) => {
+      showMessage(`${username} joined the chat`);
+    });
+
+    socket.on('userLeft', (username) => {
+      showMessage(`${username} left the chat`);
+    });
+
+    socket.on('message', (data) => {
+      const currentTime = new Date().toLocaleTimeString(); // Get the current time
+      showMessage(`${data.username}: ${data.text} (${currentTime})`);
+    });
+
+    function sendMessage() {
+      const message = document.getElementById('message').value;
+      if (message.trim() !== '') {
+        socket.emit('message', message);
+        document.getElementById('message').value = '';
+      }
+    }
+
+    function showMessage(message) {
+      const messagesElement = document.getElementById('messages');
+      messagesElement.value += message + '\n';
+      messagesElement.scrollTop = messagesElement.scrollHeight;
+    }
+
+    // Retrieve the first_name from local storage and display it
+    const name = localStorage.getItem('name');
+    if (name) {
+      showMessage(`Welcome, ${name}!`);
+    }
+  </script>
+  <script>
+
+const express = require('express');
+const http = require('http');
+const socketio = require('socket.io');
+const path = require('path');
+const mysql = require('mysql2');
+const bcrypt = require('bcrypt');
+const config = require('./config');
+const myConnection = require('express-myconnection');
+
+const app = express();
+const server = http.createServer(app);
+const io = socketio(server);
+
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, '/public')));
+
+// Database connection
+const connection = mysql.createConnection(config.database);
+
+connection.connect((error) => {
+  if (error) {
+    console.error('Error connecting to the database:', error);
+    return;
+  }
+  console.log('Connected to the database!');
+});
+
+// Store active users and their corresponding sockets
+const activeUsers = new Set();
+
+// Event fired when a client connects
+io.on('connection', (socket) => {
+  console.log('New user connected');
+
+  // Event fired when a new user joins the chat
+  socket.on('join', (username) => {
+    // Store the username in the socket object and add the user to activeUsers
+    socket.username = username;
+    activeUsers.add(username);
+
+    // Notify all connected clients about the new user
+    io.emit('userJoined', username);
+  });
+
+  // Event fired when a client sends a message
+  socket.on('message', (message) => {
+    // Broadcast the message to all connected clients
+    io.emit('message', { username: socket.username, text: message });
+  });
+
+  // Event fired when a client disconnects
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+
+    // Remove the user from activeUsers and notify all clients
+    if (socket.username) {
+      activeUsers.delete(socket.username);
+      io.emit('userLeft', socket.username);
+    }
+  });
+});
+
+// Add the following route handler to handle the root URL "/"
+app.get('/', (req, res) => {
+  res.sendFile(__dirname + '/public/index,.html');
+
+});
+
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// Routes
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+  </script>
+
+</body>
+</html>
