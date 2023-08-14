@@ -44,7 +44,7 @@ app.use('/', loginRoutes);
 
 app.get('/', (req, res) => {
   if (req.session.loggedin == true) {
-    res.render('home', { name: req.session.name });
+    res.render('home', { name: req.session.name, role1: req.session.role1, role2: req.session.role2,role3: req.session.role3});
   } else {
     res.redirect('/login');
   }
@@ -73,5 +73,6 @@ io.on('connection', (socket) => {
     io.emit('message', { username: socket.username, text: message });
   });
 });
+
 
 // Loan estimator route

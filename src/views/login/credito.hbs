@@ -18,6 +18,10 @@
             <input class="border border-gray-200 w-full text-lg placeholder-gray-500 p-2 my-2 focus:bg-white" type="number" id="loanDuration" name="loanDuration" required>
             <br>
             <button class="rounded-md bg-red-700 w-full text-lg text-white font-semibold p-2 my-3 hover:bg-red-800 foucs:bg-red-800" type="submit">Estimate Loan</button>
+
+            {{#if error}}
+            <p class="text-red-500 font-bold text-lg my-3">* {{error}}</p>
+            {{/if}}
         </form>
     </div>
 </body>

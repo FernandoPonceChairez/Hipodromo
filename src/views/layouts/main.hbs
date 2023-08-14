@@ -3,7 +3,16 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta role1="viewport" content="width=device-width, initial-scale=1.0">
+    <meta role2="viewport" content="width=device-width, initial-scale=1.0">
+    <meta role3="viewport" content="width=device-width, initial-scale=1.0">
 
+    <script>
+      const role1 localStorage.getItem('role1');
+      const role2 localStorage.getItem('role2');
+      const role3 localStorage.getItem('role3');
+    </script>
+    
     <title>Login Nodejs Mysql</title>
     
     <!-- Tailwind CSS Link -->
@@ -18,35 +27,59 @@
 
     <nav class="flex py-5 bg-red-700 text-white px-24">
         <div class="w-1/2 px-12 mr-auto">
-        <a href="/login" class="text-2x1 font-bold">Caja Hipodromo</a>
+        <a href="/login" class="text-2xl font-bold">Caja Hipodromo</a>
         </div>
         
         <ul class="w-1/2 px-16 ml-auto flex justify-end pt-1">
         
-          {{#if name}}
+        
+          {{#if role1 }}
             <li class="nav-item px-4">
               <p class="font-semibold">{{name}}</p>
             </li>
-
             <li class="nav-item px-4">
+              <a class="nav-link font-semibold bg-white text-red-700 hover:bg-white py-3 px-4 rounded-md">admin</a>
+            </li>
+            <li class="nav-item px-4">
+              <a href="/logout" class="nav-link font-semibold bg-red-500 text-white hover:bg-red-700 py-3 px-4 rounded-md">Logout</a>
+            </li>
+          {{else}}
+            {{#if role2 }}
+              <li class="nav-item px-4">
+                <p class="font-semibold">{{name}}</p>
+              </li>
+              <li class="nav-item px-4">
                 <a href="/credito" class="nav-link font-semibold bg-white text-red-700 hover:bg-white py-3 px-4 rounded-md">Credito</a>
-            </li>
-            
-
-            <li class="nav-item px-4">
-                <a href="/logout" class="nav-link font-semibold bg-red-500 text-white hover:bg-red-7000 py-3 px-4 rounded-md">Logout</a>
-            </li>
-
-            
+              </li>
+              <li class="nav-item px-4">
+                <a href="/logout" class="nav-link font-semibold bg-red-500 text-white hover:bg-red-700 py-3 px-4 rounded-md">Logout</a>
+              </li>
+            {{else}}
+              {{#if role3 }}
+              <li class="nav-item px-4">
+                <p class="font-semibold">{{name}}</p>
+              </li>
+              <li class="nav-item px-4">
+                <a class="nav-link font-semibold bg-white text-red-700 hover:bg-white py-3 px-4 rounded-md">Support</a>
+              </li>
+              <li class="nav-item px-4">
+                <a href="/logout" class="nav-link font-semibold bg-red-500 text-white hover:bg-red-700 py-3 px-4 rounded-md">Logout</a>
+              </li>
           {{else}}
             <li class="nav-item px-4">
               <a href="/login" class="nav-link font-semibold hover:bg-white hover:text-red-700 py-3 px-4 rounded-md">Login</a>
             </li>
-
             <li class="nav-item px-4">
-                <a href="/register" class="nav-link font-semibold border-2 border-white hover:bg-white hover:text-red-700 py-3 px-4 rounded-md">Register</a>
+              <a href="/register" class="nav-link font-semibold border-2 border-white hover:bg-white hover:text-red-700 py-3 px-4 rounded-md">Register</a>
             </li>
           {{/if}}
+          {{/if}}
+          {{/if}}
+
+
+          
+
+
 
         </ul>
 

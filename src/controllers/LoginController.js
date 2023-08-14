@@ -45,12 +45,28 @@ function auth (req, res) {
         if (result) {
             console.log(user.name);
             console.log(user.age);
+            console.log(user.role);
             /*res.json({ message: 'Login successful'});*/
             
             req.session.loggedin =  true;
             req.session.name = user.name;
             req.session.age = user.age;
             req.session.salary = user.salary;
+            
+
+            if(user.role=='1'){
+                req.session.role1 = true;
+                req.session.role2 = false;
+                req.session.role3 = false;
+            }else if (user.role=='2') {
+                req.session.role1 = false;
+                req.session.role2 = true;
+                req.session.role3 = false;
+            } else if(user.role=='3') {
+                req.session.role1 = false;
+                req.session.role2 = false;
+                req.session.role3 = true;
+            }
             
             res.redirect('/');
         // Include the username in the response
@@ -92,6 +108,7 @@ function storeUser(req, res){
                             req.session.name = data.name;
                             req.session.age = data.age;
                             req.session.salary = data.salary;
+                            req.session.role = data.role;
 
                             res.redirect('/');
                         });
@@ -116,7 +133,7 @@ function credito(req, res){
     if(req.session.loggedin != true){
         res.redirect('/login');
     }
-    res.render('login/credito.hbs', { name: req.session.name, age: req.session.age, salary: req.session.salary });
+    res.render('login/credito.hbs', { name: req.session.name, age: req.session.age, salary: req.session.salary, role: req.session.role });
     
 }
 
@@ -130,18 +147,84 @@ function loanEstimate(req, res) {
     const totalInterest = loanAmountFloat * 0.01 * loanDuration;
     const totalRepayment = loanAmountFloat + totalInterest;
     const monthlyInstallment = totalRepayment / loanDuration;
+    const maxRepayment = parseFloat(salary*.4);
+    const Acceptation = false;
+    console.log(maxRepayment);
+    console.log(monthlyInstallment);
+    if((maxRepayment) >= (monthlyInstallment)){
+        const Acceptation = true;
+        console.log('Si entra a esta mamada');
+        res.render('login/loan_estimation', {
+            name: req.session.name,
+            age: age,
+            salary: salary,
+            loanAmount: loanAmountFloat,
+            loanDuration: loanDuration,
+            interestRate: 0.01,
+            interestRatePercentage: 0.01 * 100,
+            totalInterest: totalInterest,
+            totalRepayment: totalRepayment,
+            monthlyInstallment: monthlyInstallment,
+            role: req.session.role
+        });
+    }else{
+        res.render('login/credito',{error: 'No se puede solicitar el credito'});
+    }
 
-    res.render('login/loan_estimation', {
-        name: req.session.name,
-        age: age,
-        salary: salary,
-        loanAmount: loanAmountFloat,
-        loanDuration: loanDuration,
-        interestRate: 0.01,
-        interestRatePercentage: 0.01 * 100,
-        totalInterest: totalInterest,
-        totalRepayment: totalRepayment,
-        monthlyInstallment: monthlyInstallment
+    
+}
+
+function solicitar(req, res) {
+    const data = req.body;
+
+    const { loanAmount, loanDuration } = req.body;
+    const salary = parseFloat(req.session.salary);
+    const age = parseInt(req.session.age);
+
+    // Convert loanAmount and totalInterest to floating-point numbers
+    const loanAmountFloat = parseFloat(loanAmount);
+    const totalInterest = loanAmountFloat * 0.01 * loanDuration;
+    const totalRepayment = loanAmountFloat + totalInterest;
+    const monthlyInstallment = totalRepayment / loanDuration;
+    const maxRepayment = parseFloat(salary * 0.4);
+
+    req.getConnection((err, conn) => {
+        if (err) {
+            // Handle error
+            console.error(err);
+            return;
+        }
+
+        conn.query('SELECT * FROM creditos WHERE email = ?', [data.Email], (err, userdata) => {
+            if (err) {
+                // Handle error
+                console.error(err);
+                return;
+            }
+
+            if (userdata.length > 0) {
+                const creditData = {
+                    email: data.Email,
+                    loanDuration: loanDuration,
+                    monthlyInstallment: monthlyInstallment,
+                    loanAmount: loanAmountFloat,
+                    interestRate: 0.01,
+                    totalInterest: totalInterest
+                };
+                console.log(creditData);
+                conn.query('INSERT INTO creditos SET ?', [creditData], (err, rows) => {
+                    if (err) {
+                        // Handle error
+                        console.error(err);
+                        return;
+                    }
+
+                    res.redirect('/');
+                });
+            } else {
+                res.render('login/credito', { error: 'Error al solicitar credito' });
+            }
+        });
     });
 }
 
@@ -154,4 +237,5 @@ module.exports = {
     logout,
     credito,
     loanEstimate,
+    solicitar,
 }
